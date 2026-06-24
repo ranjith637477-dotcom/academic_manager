@@ -1,0 +1,176 @@
+import React, { useState, useEffect } from 'react';
+import Layout from '../components/layout/Layout';
+import { useAuth } from '../context/AuthContext';
+import { attendanceService } from '../services/api';
+import { Card, PageTitle, Badge } from '../utils/helpers';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+
+const mockSubjects = [
+  { id:1, code:'CS301', name:'Data Structures', present:32, total:40 },
+  { id:2, code:'CS302', name:'Web Technologies', present:38, total:42 },
+  { id:3, code:'CS303', name:'DBMS', present:28, total:40 },
+  { id:4, code:'CS304', name:'Machine Learning', present:35, total:38 },
+  { id:5, code:'CS305', name:'Software Engineering', present:36, total:38 },
+];
+
+const mockHistory = [
+  { date:'2025-06-17', subject:{ code:'CS301' }, status:'PRESENT' },
+  { date:'2025-06-17', subject:{ code:'CS302' }, status:'PRESENT' },
+  { date:'2025-06-17', subject:{ code:'CS303' }, status:'ABSENT' },
+  { date:'2025-06-16', subject:{ code:'CS301' }, status:'PRESENT' },
+  { date:'2025-06-16', subject:{ code:'CS304' }, status:'PRESENT' },
+  { date:'2025-06-15', subject:{ code:'CS302' }, status:'OD' },
+];
+
+const mockMarkForm = { students:['Arjun Patel','Divya Krishnan','Ravi Shankar'], subject:'CS301', date: new Date().toISOString().split('T')[0] };
+
+export default function AttendancePage() {
+  const { user } = useAuth();
+  const isStudent = user?.role === 'STUDENT';
+  const [subjects] = useState(mockSubjects);
+  const [history] = useState(mockHistory);
+  const [markData, setMarkData] = useState({});
+  const [saved, setSaved] = useState(false);
+
+  const overallPresent = subjects.reduce((a,s) => a + s.present, 0);
+  const overallTotal = subjects.reduce((a,s) => a + s.total, 0);
+  const overallPct = overallTotal ? Math.round(overallPresent / overallTotal * 100) : 0;
+
+  const barData = subjects.map(s => ({ name: s.code, pct: Math.round(s.present/s.total*100) }));
+
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 3000); };
+
+  return (
+    <Layout>
+      <PageTitle title="Attendance" subtitle={isStudent ? "Track your subject-wise attendance" : "Mark and manage class attendance"} />
+
+      {isStudent ? (
+        <>
+          {/* Overall summary */}
+          <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', gap:20, marginBottom:24 }}>
+            <Card style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
+              <PieChart width={160} height={160}>
+                <Pie data={[{value:overallPct},{value:100-overallPct}]} cx={80} cy={80} innerRadius={50} outerRadius={70} dataKey="value" startAngle={90} endAngle={-270}>
+                  <Cell fill={overallPct >= 75 ? '#10b981' : '#ef4444'} />
+                  <Cell fill="#f1f5f9" />
+                </Pie>
+              </PieChart>
+              <div style={{ textAlign:'center', marginTop:-8 }}>
+                <div style={{ fontSize:26, fontWeight:800, color: overallPct >= 75 ? '#10b981' : '#ef4444' }}>{overallPct}%</div>
+                <div style={{ fontSize:12, color:'#64748b' }}>Overall Attendance</div>
+                {overallPct < 75 && <div style={{ fontSize:11, color:'#ef4444', fontWeight:600, marginTop:4 }}>⚠ Below 75%</div>}
+              </div>
+            </Card>
+
+            <Card>
+              <h3 style={{ fontSize:15, fontWeight:700, marginBottom:16 }}>Subject-wise Attendance %</h3>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={barData}>
+                  <XAxis dataKey="name" tick={{ fontSize:11 }} />
+                  <YAxis domain={[0,100]} tick={{ fontSize:11 }} />
+                  <Tooltip formatter={v => v+'%'} />
+                  <Bar dataKey="pct" radius={[4,4,0,0]}
+                    fill="#6366f1"
+                    label={{ position:'top', fontSize:11, fill:'#374151', formatter:v => v+'%' }} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </div>
+
+          {/* Subject table */}
+          <Card style={{ marginBottom:20 }}>
+            <h3 style={{ fontSize:15, fontWeight:700, marginBottom:16 }}>Subject Details</h3>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:14 }}>
+              <thead>
+                <tr style={{ background:'#f8fafc' }}>
+                  {['Code','Subject','Present','Total','Percentage','Status'].map(h => (
+                    <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:12, fontWeight:600, color:'#64748b', borderBottom:'1px solid #e2e8f0' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {subjects.map(s => {
+                  const pct = Math.round(s.present/s.total*100);
+                  return (
+                    <tr key={s.id} style={{ borderBottom:'1px solid #f1f5f9' }}>
+                      <td style={{ padding:'12px 14px', fontWeight:600, color:'#6366f1' }}>{s.code}</td>
+                      <td style={{ padding:'12px 14px' }}>{s.name}</td>
+                      <td style={{ padding:'12px 14px', color:'#10b981', fontWeight:600 }}>{s.present}</td>
+                      <td style={{ padding:'12px 14px', color:'#374151' }}>{s.total}</td>
+                      <td style={{ padding:'12px 14px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <div style={{ flex:1, background:'#f1f5f9', borderRadius:4, height:8 }}>
+                            <div style={{ width:`${pct}%`, background: pct>=75?'#10b981':'#ef4444', height:8, borderRadius:4 }} />
+                          </div>
+                          <span style={{ fontWeight:700, color: pct>=75?'#10b981':'#ef4444', minWidth:36 }}>{pct}%</span>
+                        </div>
+                      </td>
+                      <td style={{ padding:'12px 14px' }}>
+                        <span style={{ background: pct>=75?'#d1fae5':'#fee2e2', color: pct>=75?'#065f46':'#991b1b', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:600 }}>
+                          {pct>=75?'✓ Good':'⚠ Low'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </Card>
+
+          {/* Recent history */}
+          <Card>
+            <h3 style={{ fontSize:15, fontWeight:700, marginBottom:16 }}>Recent Attendance History</h3>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
+              {history.map((h,i) => (
+                <div key={i} style={{ padding:'8px 14px', background: h.status==='PRESENT'?'#d1fae5': h.status==='ABSENT'?'#fee2e2':'#eef2ff', borderRadius:8, fontSize:13 }}>
+                  <span style={{ fontWeight:600 }}>{h.subject?.code}</span>
+                  <span style={{ color:'#64748b', margin:'0 6px' }}>·</span>
+                  <span style={{ color:'#64748b' }}>{new Date(h.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</span>
+                  <span style={{ marginLeft:8 }}><Badge status={h.status} /></span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <h3 style={{ fontSize:15, fontWeight:700, marginBottom:4 }}>Mark Attendance — {mockMarkForm.subject}</h3>
+          <p style={{ fontSize:13, color:'#64748b', marginBottom:20 }}>Date: {mockMarkForm.date}</p>
+          {saved && <div style={{ background:'#d1fae5', color:'#065f46', padding:'10px 16px', borderRadius:8, marginBottom:16, fontSize:14 }}>✓ Attendance saved successfully!</div>}
+          <table style={{ width:'100%', borderCollapse:'collapse', fontSize:14 }}>
+            <thead>
+              <tr style={{ background:'#f8fafc' }}>
+                {['#','Student Name','Status'].map(h => (
+                  <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:12, fontWeight:600, color:'#64748b', borderBottom:'1px solid #e2e8f0' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {mockMarkForm.students.map((name, i) => (
+                <tr key={i} style={{ borderBottom:'1px solid #f1f5f9' }}>
+                  <td style={{ padding:'12px 14px', color:'#9ca3af' }}>{i+1}</td>
+                  <td style={{ padding:'12px 14px', fontWeight:500 }}>{name}</td>
+                  <td style={{ padding:'12px 14px' }}>
+                    <div style={{ display:'flex', gap:8 }}>
+                      {['PRESENT','ABSENT','OD'].map(s => (
+                        <button key={s} onClick={() => setMarkData(d => ({...d, [i]:s}))}
+                          style={{ padding:'6px 14px', border:`1.5px solid ${s==='PRESENT'?'#10b981':s==='ABSENT'?'#ef4444':'#6366f1'}`, borderRadius:6, cursor:'pointer', fontSize:12, fontWeight:600,
+                            background: markData[i]===s ? (s==='PRESENT'?'#10b981':s==='ABSENT'?'#ef4444':'#6366f1') : 'transparent',
+                            color: markData[i]===s ? '#fff' : (s==='PRESENT'?'#10b981':s==='ABSENT'?'#ef4444':'#6366f1') }}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button onClick={handleSave} style={{ marginTop:20, padding:'10px 24px', background:'#4f46e5', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:14, fontWeight:600 }}>
+            Save Attendance
+          </button>
+        </Card>
+      )}
+    </Layout>
+  );
+}
