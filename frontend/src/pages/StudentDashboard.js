@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import Layout from '../components/layout/Layout';
 import { useAuth } from '../context/AuthContext';
 import { attendanceService, marksService, notificationService } from '../services/api';
-import { Card, Badge, formatDate } from '../utils/helpers';
+import { Card } from '../utils/helpers';
 import Chatbot from '../components/chatbot/Chatbot';
 
 const StatCard = ({ icon, label, value, color, sub }) => (
@@ -24,7 +24,6 @@ export default function StudentDashboard() {
   const [attendance, setAttendance] = useState([]);
   const [marks, setMarks] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -35,7 +34,6 @@ export default function StudentDashboard() {
       setAttendance(a.data?.data || []);
       setMarks(m.data?.data || []);
       setNotifications((n.data?.data || []).slice(0, 5));
-      setLoading(false);
     });
   }, []);
 
@@ -75,7 +73,6 @@ export default function StudentDashboard() {
   ];
 
   const displayNotifications = notifications.length ? notifications : mockNotifications;
-  const notifColors = { WARNING:'#fef3c7', INFO:'#eef2ff', SUCCESS:'#d1fae5', ALERT:'#fee2e2' };
   const notifIcons = { WARNING:'⚠️', INFO:'ℹ️', SUCCESS:'✅', ALERT:'🚨' };
 
   return (

@@ -25,7 +25,6 @@ const mockAllCerts = [
 export default function CertificatePage() {
   const { user } = useAuth();
   const isStudent = user?.role === 'STUDENT';
-  const isAdmin = user?.role === 'ADMIN';
   const [certs, setCerts] = useState([]);
   const [showForm, setShowForm] = useState(null);
   const [reason, setReason] = useState('');

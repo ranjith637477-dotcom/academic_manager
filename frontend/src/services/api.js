@@ -11,7 +11,7 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('sams_token');
       localStorage.removeItem('sams_user');
-      window.location.href = '/login';
+      window.location.href = `${process.env.PUBLIC_URL || ''}/login`;
     }
     return Promise.reject(err);
   }

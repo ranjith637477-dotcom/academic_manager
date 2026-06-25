@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useAuth } from '../context/AuthContext';
-import { attendanceService } from '../services/api';
 import { Card, PageTitle, Badge } from '../utils/helpers';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 

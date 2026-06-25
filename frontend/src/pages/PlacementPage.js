@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { useAuth } from '../context/AuthContext';
 import { opportunityService } from '../services/api';
-import { Card, PageTitle, Badge, Btn, formatDate } from '../utils/helpers';
+import { Card, PageTitle, Btn, formatDate } from '../utils/helpers';
 
 const mockOpps = [
   { id:1, type:'PLACEMENT', company:'TCS', title:'Software Engineer', description:'Join TCS as a Software Engineer. Work on cutting-edge enterprise projects across banking, retail, and healthcare domains.', eligibility:'CGPA ≥ 7.0, CSE/IT', salaryPackage:'3.5 LPA', location:'Chennai', applyLink:'#', deadline:'2025-07-15', isActive:true },

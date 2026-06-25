@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { useAuth } from '../context/AuthContext';
 import { marksService } from '../services/api';
-import { Card, PageTitle, Btn } from '../utils/helpers';
+import { Card, PageTitle } from '../utils/helpers';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 const mockMarks = [

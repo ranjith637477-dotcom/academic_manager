@@ -1,6 +1,7 @@
 {
   "name": "sams-frontend",
   "version": "1.0.0",
+  "homepage": "https://ranjith637477-dotcom.github.io/academic_manager",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
